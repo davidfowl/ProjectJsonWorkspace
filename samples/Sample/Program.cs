@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using Microsoft.CodeAnalysis.Workspaces.Dnx;
 using Microsoft.Framework.Runtime;
@@ -21,6 +22,9 @@ public class Program
 
     private void Do(string path)
     {
-        
+        // This is so meta!
+        var workspace = new ProjectJsonWorkspace(path);
+        var thisDocument = workspace.CurrentSolution.GetDocumentIdsWithFilePath(Path.Combine(path, "Program.cs")).First();
+        var project = workspace.CurrentSolution.GetProject(thisDocument.ProjectId);
     }
 }

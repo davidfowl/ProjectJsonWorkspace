@@ -16,7 +16,7 @@ namespace Microsoft.CodeAnalysis.Workspaces.Dnx
         private static readonly Cache cache = new Cache(cacheContextAccessor);
         private static readonly NamedCacheDependencyProvider namedCacheDependencyProvider = new NamedCacheDependencyProvider();
 
-        public IList<ProjectInformation> Projects { get; } = new List<ProjectInformation>();
+        public IDictionary<FrameworkName, ProjectInformation> Projects { get; } = new Dictionary<FrameworkName, ProjectInformation>();
 
         public static ProjectModel GetModel(string path)
         {
@@ -60,7 +60,7 @@ namespace Microsoft.CodeAnalysis.Workspaces.Dnx
                     DependencyInfo = dependencyInfo
                 };
 
-                model.Projects.Add(projectInfo);
+                model.Projects.Add(framework.FrameworkName, projectInfo);
             }
 
             return model;

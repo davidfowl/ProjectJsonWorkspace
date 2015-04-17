@@ -1,20 +1,14 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Runtime.Versioning;
-using Microsoft.CodeAnalysis;
+using System.Reflection.PortableExecutable;
 using Microsoft.CodeAnalysis.Host.Mef;
-using Microsoft.CodeAnalysis.Text;
-using Microsoft.Framework.Runtime;
-using Microsoft.Framework.Runtime.Compilation;
-using Microsoft.Framework.Runtime.Caching;
-using DnxProject = Microsoft.Framework.Runtime.Project;
 
 namespace Microsoft.CodeAnalysis.Workspaces.Dnx
 {
     public class ProjectJsonWorkspace : Workspace
     {
+        private Dictionary<string, AssemblyMetadata> _cache = new Dictionary<string, AssemblyMetadata>();
+
         private readonly string[] _projectPaths;
 
         public ProjectJsonWorkspace(string projectPath) : this(new[] { projectPath })
@@ -30,25 +24,69 @@ namespace Microsoft.CodeAnalysis.Workspaces.Dnx
 
         private void Initialize()
         {
-            foreach(var projectPath in _projectPaths)
+            foreach (var projectPath in _projectPaths)
             {
-                var model = ProjectModel.GetModel(projectPath);
+                AddProject(projectPath);
+            }
+        }
+
+        private void AddProject(string projectPath)
+        {
+            var model = ProjectModel.GetModel(projectPath);
+
+            // Get all of the specific projects (there is a project per framework)
+            foreach (var p in model.Projects.Values)
+            {
+                AddProject(p);
+            }
+        }
+
+        private ProjectId AddProject(ProjectInformation project)
+        {
+            // Create the framework specific project and add it to the workspace
+            var projectInfo = ProjectInfo.Create(
+                                ProjectId.CreateNewId(),
+                                VersionStamp.Create(),
+                                project.Project.Name + "+" + project.Framework,
+                                project.Project.Name,
+                                LanguageNames.CSharp,
+                                project.Path);
+
+            OnProjectAdded(projectInfo);
+
+            foreach (var path in project.DependencyInfo.References)
+            {
+                OnMetadataReferenceAdded(projectInfo.Id, GetMetadataReference(path));
             }
 
-            /*foreach (var p in model.Projects)
+            foreach (var reference in project.DependencyInfo.ProjectReferences)
             {
-                Console.WriteLine(p.Project.Name + "+" + p.Framework);
+                var pe = ProjectModel.GetModel(reference.Path);
+                
+                // This being null would me a broken project reference
+                var projectReference = pe.Projects[reference.Framework];
 
-                foreach (var reference in p.DependencyInfo.References)
-                {
-                    Console.WriteLine(reference);
-                }
+                var id = AddProject(projectReference);
+                OnProjectReferenceAdded(projectInfo.Id, new Microsoft.CodeAnalysis.ProjectReference(id));
+            }
 
-                foreach (var reference in p.DependencyInfo.ProjectReferences)
+            return projectInfo.Id;
+        }
+
+        private MetadataReference GetMetadataReference(string path)
+        {
+            AssemblyMetadata assemblyMetadata;
+            if (!_cache.TryGetValue(path, out assemblyMetadata))
+            {
+                using (var stream = File.OpenRead(path))
                 {
-                    Do(reference.Path);
+                    var moduleMetadata = ModuleMetadata.CreateFromStream(stream, PEStreamOptions.PrefetchMetadata);
+                    assemblyMetadata = AssemblyMetadata.Create(moduleMetadata);
+                    _cache[path] = assemblyMetadata;
                 }
-            }*/
+            }
+            
+            return assemblyMetadata.GetReference();
         }
     }
 }
