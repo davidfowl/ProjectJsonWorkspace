@@ -1,7 +1,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection.PortableExecutable;
+using System.Text;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Host.Mef;
+using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.CodeAnalysis.Workspaces.Dnx
 {
@@ -54,6 +57,23 @@ namespace Microsoft.CodeAnalysis.Workspaces.Dnx
 
             OnProjectAdded(projectInfo);
 
+            OnParseOptionsChanged(projectInfo.Id, new CSharpParseOptions(project.CompilationSettings.LanguageVersion, preprocessorSymbols: project.CompilationSettings.Defines));
+
+            OnCompilationOptionsChanged(projectInfo.Id, project.CompilationSettings.CompilationOptions);
+
+            foreach (var file in project.SourceFiles)
+            {
+                using (var stream = File.OpenRead(file))
+                {
+                    var sourceText = SourceText.From(stream, encoding: Encoding.UTF8);
+                    var id = DocumentId.CreateNewId(projectInfo.Id);
+                    var version = VersionStamp.Create();
+                    
+                    var loader = TextLoader.From(TextAndVersion.Create(sourceText, version));
+                    OnDocumentAdded(DocumentInfo.Create(id, file, filePath: file, loader: loader));
+                }
+            }
+
             foreach (var path in project.DependencyInfo.References)
             {
                 OnMetadataReferenceAdded(projectInfo.Id, GetMetadataReference(path));
@@ -62,7 +82,7 @@ namespace Microsoft.CodeAnalysis.Workspaces.Dnx
             foreach (var reference in project.DependencyInfo.ProjectReferences)
             {
                 var pe = ProjectModel.GetModel(reference.Path);
-                
+
                 // This being null would me a broken project reference
                 var projectReference = pe.Projects[reference.Framework];
 

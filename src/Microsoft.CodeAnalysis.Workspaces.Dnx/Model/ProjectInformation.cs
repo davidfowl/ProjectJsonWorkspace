@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.Versioning;
 using Microsoft.Framework.Runtime;
 using DnxProject = Microsoft.Framework.Runtime.Project;
+using Microsoft.Framework.Runtime.Roslyn;
 
 namespace Microsoft.CodeAnalysis.Workspaces.Dnx
 {
@@ -15,6 +16,8 @@ namespace Microsoft.CodeAnalysis.Workspaces.Dnx
         public string Configuration { get; set; }
 
         public FrameworkName Framework { get; set; }
+
+        public CompilationSettings CompilationSettings { get; set; }
 
         // List of source files
         public IList<string> SourceFiles { get; set; }

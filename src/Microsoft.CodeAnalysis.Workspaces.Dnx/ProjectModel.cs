@@ -6,6 +6,7 @@ using System.Runtime.Versioning;
 using Microsoft.Framework.Runtime;
 using Microsoft.Framework.Runtime.Compilation;
 using Microsoft.Framework.Runtime.Caching;
+using Microsoft.Framework.Runtime.Roslyn;
 using DnxProject = Microsoft.Framework.Runtime.Project;
 
 namespace Microsoft.CodeAnalysis.Workspaces.Dnx
@@ -57,7 +58,9 @@ namespace Microsoft.CodeAnalysis.Workspaces.Dnx
                     Configuration = "Debug",
                     Framework = framework.FrameworkName,
                     SourceFiles = dependencySources,
-                    DependencyInfo = dependencyInfo
+                    DependencyInfo = dependencyInfo,
+                    CompilationSettings = project.GetCompilerOptions(framework.FrameworkName, "Debug")
+                                                 .ToCompilationSettings(framework.FrameworkName)
                 };
 
                 model.Projects.Add(framework.FrameworkName, projectInfo);
