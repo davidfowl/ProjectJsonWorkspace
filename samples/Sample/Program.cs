@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis.Workspaces.Dnx;
-using Microsoft.Framework.Runtime;
+using Microsoft.Dnx.Runtime;
 
 /// <summary>
 /// This is a doc comment

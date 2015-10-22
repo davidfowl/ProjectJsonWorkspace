@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
-using Microsoft.Framework.Runtime;
-using Microsoft.Framework.Runtime.Compilation;
-using Microsoft.Framework.Runtime.Caching;
-using Microsoft.Framework.Runtime.Roslyn;
-using DnxProject = Microsoft.Framework.Runtime.Project;
+
+using Microsoft.Dnx.Compilation;
+using Microsoft.Dnx.Compilation.Caching;
+using Microsoft.Dnx.Compilation.CSharp;
+using Microsoft.Dnx.Runtime;
+
+using DnxProject = Microsoft.Dnx.Runtime.Project;
 
 namespace Microsoft.CodeAnalysis.Workspaces.Dnx
 {
@@ -15,7 +17,6 @@ namespace Microsoft.CodeAnalysis.Workspaces.Dnx
     {
         private static readonly CacheContextAccessor cacheContextAccessor = new CacheContextAccessor();
         private static readonly Cache cache = new Cache(cacheContextAccessor);
-        private static readonly NamedCacheDependencyProvider namedCacheDependencyProvider = new NamedCacheDependencyProvider();
 
         public IDictionary<FrameworkName, ProjectInformation> Projects { get; } = new Dictionary<FrameworkName, ProjectInformation>();
 
@@ -85,7 +86,7 @@ namespace Microsoft.CodeAnalysis.Workspaces.Dnx
                     ExportedSourcesFiles = new List<string>()
                 };
 
-                foreach (var library in applicationHostContext.DependencyWalker.Libraries)
+                foreach (var library in applicationHostContext.LibraryManager.GetLibraryDescriptions())
                 {
                     // Skip unresolved libraries
                     if (!library.Resolved)
@@ -134,17 +135,12 @@ namespace Microsoft.CodeAnalysis.Workspaces.Dnx
                     }
                 }
 
-                var exportWithoutProjects = ProjectExportProviderHelper.GetExportsRecursive(
-                     cache,
-                     applicationHostContext.LibraryManager,
-                     applicationHostContext.LibraryExportProvider,
-                     new LibraryKey
-                     {
-                         Configuration = "Debug",
-                         TargetFramework = frameworkName,
-                         Name = project.Name
-                     },
-                     library => library.Type != "Project");
+                var libraryExporter = new LibraryExporter(
+                    applicationHostContext.LibraryManager,
+                    null,
+                    "Debug");
+
+                var exportWithoutProjects = libraryExporter.GetNonProjectExports(project.Name);
 
                 foreach (var reference in exportWithoutProjects.MetadataReferences)
                 {
@@ -170,16 +166,13 @@ namespace Microsoft.CodeAnalysis.Workspaces.Dnx
 
             return cache.Get<ApplicationHostContext>(cacheKey, ctx =>
             {
-                var applicationHostContext = new ApplicationHostContext(null,
-                                                                        project.ProjectDirectory,
-                                                                        packagesDirectory: null,
-                                                                        configuration: configuration,
-                                                                        targetFramework: frameworkName,
-                                                                        cache: cache,
-                                                                        cacheContextAccessor: cacheContextAccessor,
-                                                                        namedCacheDependencyProvider: namedCacheDependencyProvider);
+                var applicationHostContext = new ApplicationHostContext
+                {
+                    ProjectDirectory = project.ProjectDirectory,
+                    TargetFramework = frameworkName
+                };
 
-                applicationHostContext.DependencyWalker.Walk(project.Name, project.Version, frameworkName);
+                ApplicationHostContext.Initialize(applicationHostContext);
 
                 return applicationHostContext;
             });
@@ -200,17 +193,6 @@ namespace Microsoft.CodeAnalysis.Workspaces.Dnx
         private static string GetProjectRelativeFullPath(DnxProject project, string path)
         {
             return Path.GetFullPath(Path.Combine(project.ProjectDirectory, path));
-        }
-
-        private class LibraryKey : ILibraryKey
-        {
-            public string Name { get; set; }
-
-            public FrameworkName TargetFramework { get; set; }
-
-            public string Configuration { get; set; }
-
-            public string Aspect { get; set; }
-        }
+        }        
     }
 }
