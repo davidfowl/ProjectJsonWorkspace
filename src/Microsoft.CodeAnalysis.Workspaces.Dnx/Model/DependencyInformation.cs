@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Microsoft.Framework.Runtime;
+
+using Microsoft.Dnx.Runtime;
 
 namespace Microsoft.CodeAnalysis.Workspaces.Dnx
 {

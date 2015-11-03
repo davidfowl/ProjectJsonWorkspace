@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.Versioning;
-using Microsoft.Framework.Runtime;
-using DnxProject = Microsoft.Framework.Runtime.Project;
+using DnxProject = Microsoft.Dnx.Runtime.Project;
 
 namespace Microsoft.CodeAnalysis.Workspaces.Dnx
 {
