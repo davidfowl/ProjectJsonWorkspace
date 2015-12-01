@@ -2,26 +2,19 @@ using System;
 using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis.Workspaces.Dnx;
-using Microsoft.Dnx.Runtime;
+using Microsoft.Extensions.PlatformAbstractions;
 
 /// <summary>
 /// This is a doc comment
 /// </summary>
 public class Program
 {
-    private readonly IApplicationEnvironment _appEnv;
-
-    public Program(IApplicationEnvironment appEnv)
+    public static void Main()
     {
-        _appEnv = appEnv;
+        Do(PlatformServices.Default.Application.ApplicationBasePath);
     }
 
-    public void Main()
-    {
-        Do(_appEnv.ApplicationBasePath);
-    }
-
-    private void Do(string path)
+    private static void Do(string path)
     {
         // This is so meta!
         var workspace = new ProjectJsonWorkspace(path);

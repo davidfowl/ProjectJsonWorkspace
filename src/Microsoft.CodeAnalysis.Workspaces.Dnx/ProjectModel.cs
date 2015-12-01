@@ -61,7 +61,7 @@ namespace Microsoft.CodeAnalysis.Workspaces.Dnx
                     SourceFiles = dependencySources,
                     DependencyInfo = dependencyInfo,
                     CompilationSettings = project.GetCompilerOptions(framework.FrameworkName, "Debug")
-                                                 .ToCompilationSettings(framework.FrameworkName)
+                                                 .ToCompilationSettings(framework.FrameworkName, "Debug")
                 };
 
                 model.Projects.Add(framework.FrameworkName, projectInfo);

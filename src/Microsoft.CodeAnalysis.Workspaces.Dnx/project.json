@@ -1,14 +1,13 @@
 {
   "version": "1.0.0-*",
-    "dependencies": {
-        "Microsoft.Framework.FileSystemGlobbing": "1.0.0-beta8",
-        "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.0.0",
-        "Microsoft.Composition": "1.0.30",
-        "Microsoft.Dnx.Runtime": "1.0.0-beta8",
-        "Microsoft.Dnx.Compilation": "1.0.0-beta8",
-        "Microsoft.Dnx.Compilation.CSharp": "1.0.0-beta8",
-        "Microsoft.Dnx.Compilation.CSharp.Common": "1.0.0-beta8"
-    },
+  "dependencies": {
+    "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.0.0",
+    "Microsoft.Composition": "1.0.30",
+    "Microsoft.Dnx.Runtime": "1.0.0-rc1-final",
+    "Microsoft.Dnx.Compilation": "1.0.0-rc1-final",
+    "Microsoft.Dnx.Compilation.CSharp": "1.0.0-rc1-final",
+    "Microsoft.Dnx.Compilation.CSharp.Common": "1.0.0-rc1-final"
+  },
   "frameworks": {
     "dnx451": {
       "frameworkAssemblies": {
